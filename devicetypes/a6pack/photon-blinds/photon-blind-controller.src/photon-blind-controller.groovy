@@ -111,11 +111,12 @@ def setLevel(val) {
 
 def photoresistor() {
 	log.debug "Executing 'photoresistor'"
-    getPhotoresistor()
+    getLXvalue()
 }
 
 def refresh() { //TODO
 	log.debug "Executing 'refresh'"
+    getLUXvalue()
 }
 
 private put(level) {
@@ -129,16 +130,31 @@ private put(level) {
 }
 
 // Get the Photoresistor Value
-private getPhotoresistor() {
-//Particle Photon API Call
-    def photoresistorClosure = { response ->
-	  	log.debug "Photoresistor Request was successful, $response.data"
-      	sendEvent(name: "photoresistor", value: response.data.return_value)
+def getLUXvalue(){
+//now - each blind will try to pull LUX from itself as it is looking to its own device id and token,
+//rather than from the Photon in the Dining area with the photoresistor
+	httpGet(uri: "https://api.particle.io/v1/devices/180031001347343339383037/LightValue?access_token=54d4bc4d5ed6a888545a8064377473858c233479",
+//	httpGet(uri: "https://api.particle.io/v1/devices/${deviceId}/LightValue?access_token=${token}",//test
+			contentType: 'application/json',)
+    {resp ->           
+            log.debug "resp data: ${resp.data}"
+            log.debug "result: ${resp.data.result}"
+		sendEvent(name: "photoresistor", value: "${resp.data.result}" )
 	}
-    def photoresistorParams = [
-  		uri: "https://api.spark.io/v1/devices/${deviceId}/getLightValue",
-        body: [access_token: token],  
-        success: photoresistorClosure
-	]
-	httpPost(photoresistorParams)
+
 }
+
+
+//private getPhotoresistor() {
+//Particle Photon API Call
+//    def photoresistorClosure = { response ->
+//	  	log.debug "Photoresistor Request was successful, $response.data"
+//      	sendEvent(name: "photoresistor", value: response.data.return_value)
+//	}
+//    def photoresistorParams = [
+//  		uri: "https://api.spark.io/v1/devices/${deviceId}/getLightValue",
+//        body: [access_token: token],  
+//        success: photoresistorClosure
+//	]
+//	httpPost(photoresistorParams)
+//}
